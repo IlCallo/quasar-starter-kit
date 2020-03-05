@@ -1,48 +1,23 @@
-{{#preset.typescript}}const { resolve } = require('path');
-{{/preset.typescript}}
 module.exports = {
   // https://eslint.org/docs/user-guide/configuring#configuration-cascading-and-hierarchy
   // This option interrupts the configuration hierarchy at this file
-  // Remove this if you have an higher level ESLint config file (it usually happens into a monorepos)
+  // Remove this if you have an higher level ESLint config file (it usually happens into a monorepo)
   root: true,
-
-  {{#preset.typescript}}
-  // https://eslint.vuejs.org/user-guide/#how-to-use-custom-parser
-  // Must use parserOptions instead of "parser" to allow vue-eslint-parser to keep working
-  // `parser: 'vue-eslint-parser'` is already included with any 'plugin:vue/**' config and should be omitted
-  {{/preset.typescript}}
-  parserOptions: {
-    {{#if preset.typescript}}
-    // https://github.com/typescript-eslint/typescript-eslint/tree/master/packages/parser#configuration
-    // https://github.com/TypeStrong/fork-ts-checker-webpack-plugin#eslint
-    // Needed to make the parser take into account 'vue' files
-    extraFileExtensions: ['.vue'],
-    parser: '@typescript-eslint/parser',
-    project: resolve(__dirname, './tsconfig.json'),
-    tsconfigRootDir: __dirname,
-    {{else}}
-    parser: 'babel-eslint',
-    {{/if}}
-    ecmaVersion: 2018, // Allows for the parsing of modern ECMAScript features
-    sourceType: 'module', // Allows for the use of imports
-  },
 
   env: {
     browser: true
   },
 
-  // Rules order is important, please avoid shuffling them
+  // Configuration extensions order is important
+  // CHANGE IT ONLY IF YOU KNOW WHAT YOU'RE DOING
   extends: [
-    // Base ESLint recommended rules
-    'eslint:recommended',
+    "quasar",
 
     {{#preset.typescript}}
-    // https://github.com/typescript-eslint/typescript-eslint/tree/master/packages/eslint-plugin#usage
-    // ESLint typescript rules
-    'plugin:@typescript-eslint/eslint-recommended',
-    'plugin:@typescript-eslint/recommended',
-    // consider disabling this class of rules if linting takes too long
-    'plugin:@typescript-eslint/recommended-requiring-type-checking',
+    // https://github.com/typescript-eslint/typescript-eslint/tree/master/packages/eslint-plugin#recommended-configs
+    // consider using "quasar/typescript" instead if linting takes too long
+    // it will disable "plugin:@typescript-eslint/recommended-requiring-type-checking" rules group
+    "quasar/typescript-with-type-checking",
     {{/preset.typescript}}    
 
     // https://eslint.vuejs.org/rules/#priority-a-essential-error-prevention
@@ -50,34 +25,16 @@ module.exports = {
     'plugin:vue/essential',
 
     {{#if_eq lintConfig "standard"}}
-    'standard',
+    'quasar/style-standard',
     {{/if_eq}}
     {{#if_eq lintConfig "airbnb"}}
-    'airbnb-base',
+    'quasar/style-airbnb',
     {{/if_eq}}
-    {{#if_eq lintConfig "prettier"}}
-    // https://github.com/prettier/eslint-config-prettier#installation
-    // usage with Prettier, provided by 'eslint-config-prettier'.
-    'prettier',
-    {{#preset.typescript}}'prettier/@typescript-eslint',{{/preset.typescript}}
-    'prettier/vue',
-    {{/if_eq}}
-  ],
-
-  plugins: [
-    {{#preset.typescript}}
-    // required to apply rules which need type information
-    '@typescript-eslint',
-
-    {{/preset.typescript}}
-    // https://eslint.vuejs.org/user-guide/#why-doesn-t-it-work-on-vue-file
-    // required to lint *.vue files
-    'vue',
-
     {{#if_eq lintConfig "prettier"}}
     // https://github.com/typescript-eslint/typescript-eslint/issues/389#issuecomment-509292674
-    // Prettier has not been included as plugin to avoid performance impact
-    // add it as an extension for your IDE
+    // Prettier has not been included as ESLint plugin to avoid performance impact
+    // it should be added as an extension to your IDE
+    'quasar/style-prettier{{#preset.typescript}}-with-typescript{{/preset.typescript}}'
     {{/if_eq}}
   ],
 
@@ -92,43 +49,6 @@ module.exports = {
 
   // add your custom rules here
   rules: {
-    {{#if_eq lintConfig "standard"}}
-    // allow async-await
-    'generator-star-spacing': 'off',
-    // allow paren-less arrow functions
-    'arrow-parens': 'off',
-    'one-var': 'off',
-
-    'import/first': 'off',
-    'import/named': 'error',
-    'import/namespace': 'error',
-    'import/default': 'error',
-    'import/export': 'error',
-    'import/extensions': 'off',
-    'import/no-unresolved': 'off',
-    'import/no-extraneous-dependencies': 'off',
-    {{/if_eq}}
-    {{#if_eq lintConfig "airbnb"}}
-    'no-param-reassign': 'off',
-
-    'import/first': 'off',
-    'import/named': 'error',
-    'import/namespace': 'error',
-    'import/default': 'error',
-    'import/export': 'error',
-    'import/extensions': 'off',
-    'import/no-unresolved': 'off',
-    'import/no-extraneous-dependencies': 'off',
-    'import/prefer-default-export': 'off',
-    {{/if_eq}}
-    'prefer-promise-reject-errors': 'off',
-
-    {{#preset.typescript}}
-    // TypeScript
-    'quotes': ['warn', 'single'],
-    '@typescript-eslint/explicit-function-return-type': 'off',
-    {{/preset.typescript}}
-
     // allow debugger during development only
     'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off'
   }
