@@ -1,1 +1,7 @@
 /dist
+/src-bex/www
+/src-capacitor
+/src-cordova
+/.quasar
+/node_modules
+{{#preset.typescript}}{{#preset.lint}}/src-ssr{{/preset.lint}}{{/preset.typescript}}

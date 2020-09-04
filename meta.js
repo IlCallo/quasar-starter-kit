@@ -1,4 +1,5 @@
 const { complete } = require('./utils')
+const escape = val => JSON.stringify(val).slice(1, -1)
 
 module.exports = {
   prompts: {
@@ -12,13 +13,15 @@ module.exports = {
       type: 'string',
       message: 'Project product name (must start with letter if building mobile apps)',
       default: 'Quasar App',
-      validate: val => val && val.length > 0
+      validate: val => val && val.length > 0,
+      transformer: escape
     },
 
     description: {
       type: 'string',
       message: 'Project description',
       default: 'A Quasar Framework app',
+      transformer: escape
     },
 
     author: {
@@ -58,19 +61,14 @@ module.exports = {
       message: 'Pick a Quasar components & directives import strategy: (can be changed later)',
       choices: [
         {
-          name: '* Auto-import in-use Quasar components & directives\n    - slightly higher compile time; next to minimum bundle size; most convenient',
-          value: '\'auto\'',
+          name: '* Auto-import in-use Quasar components & directives\n    - also treeshakes Quasar; minimum bundle size',
+          value: 'auto',
           short: 'Auto import',
           checked: true
         },
         {
-          name: '* Manually specify what to import\n    - fastest compile time; minimum bundle size; most tedious',
-          value: 'false',
-          short: 'Manual'
-        },
-        {
-          name: '* Import everything from Quasar\n    - not treeshaking Quasar; biggest bundle size; convenient',
-          value: 'true',
+          name: '* Import everything from Quasar\n    - not treeshaking Quasar; biggest bundle size',
+          value: 'all',
           short: 'Import everything'
         }
       ]
@@ -81,9 +79,13 @@ module.exports = {
       message: 'Check the features needed for your project:',
       choices: [
         {
-          name: 'ESLint',
+          name: 'ESLint (recommended)',
           value: 'lint',
           checked: true
+        },
+        {
+          name: 'TypeScript',
+          value: 'typescript'
         },
         {
           name: 'Vuex',
@@ -100,6 +102,31 @@ module.exports = {
         {
           name: 'IE11 support',
           value: 'ie'
+        }
+      ]
+    },
+
+    typescriptConfig: {
+      when: 'preset.typescript',
+      type: 'list',
+      message: 'Pick a component style:',
+      choices: [
+        {
+          name:
+            'Composition API (recommended) (https://github.com/vuejs/composition-api)',
+          value: 'composition',
+          short: 'Composition',
+        },
+        {
+          name:
+            'Class-based (recommended) (https://github.com/vuejs/vue-class-component & https://github.com/kaorun343/vue-property-decorator)',
+          value: 'class',
+          short: 'Class',
+        },
+        {
+          name: 'Options API',
+          value: 'options',
+          short: 'options',
         }
       ]
     },
@@ -127,16 +154,10 @@ module.exports = {
       ]
     },
 
-    cordovaId: {
-      type: 'string',
-      message: 'Cordova/Capacitor id (disregard if not building mobile apps)',
-      default: 'org.cordova.quasar.app'
-    },
-
     autoInstall: {
       type: 'list',
       message:
-        'Should we run `npm install` for you after the project has been created? (recommended)',
+        'Continue to install project dependencies after the project has been created? (recommended)',
       choices: [
         {
           name: 'Yes, use Yarn (recommended)',
@@ -158,21 +179,47 @@ module.exports = {
   },
 
   filters: {
-    '.eslintrc.js': 'preset.lint',
+    // ESlint files
     '.eslintignore': 'preset.lint',
-    '.stylintrc': 'preset.lint',
-    'src/store/**/*': 'preset.vuex',
-    'src/i18n/**/*': 'preset.i18n',
-    'src/boot/i18n.js': 'preset.i18n',
-    'src/boot/axios.js': 'preset.axios',
+    '.eslintrc.js': 'preset.lint',
+
+    // Default files when not using TypeScript
+    'jsconfig.json': '!preset.typescript',
+    'src/router/*.js': '!preset.typescript',
+
+    // Presets files when not using TypeScript
+    'src/boot/axios.js': 'preset.axios && !preset.typescript',
+    'src/boot/i18n.js': 'preset.i18n && !preset.typescript',
+    'src/i18n/**/*.js': 'preset.i18n && !preset.typescript',
+    'src/store/**/*.js': 'preset.vuex && !preset.typescript',
+
+    // TypeScript files
+    '.prettierrc': `preset.lint && preset.typescript && lintConfig === 'prettier'`,
+    'tsconfig.json': 'preset.typescript',
+    'src/env.d.ts': 'preset.typescript',
+    'src/shims-vue.d.ts': 'preset.typescript',
+    'src/components/CompositionComponent.vue': `preset.typescript && typescriptConfig === 'composition'`,
+    'src/components/ClassComponent.vue': `preset.typescript && typescriptConfig === 'class'`,
+    'src/components/OptionsComponent.vue': `preset.typescript && typescriptConfig === 'options'`,
+    'src/components/models.ts': `preset.typescript`,
+
+    // Default files using TypeScript
+    'src/router/*.ts': 'preset.typescript',
+
+    // Presets files using TypeScript
+    'src/boot/axios.ts': 'preset.axios && preset.typescript',
+    'src/boot/composition-api.ts': `preset.typescript && typescriptConfig === 'composition'`,
+    'src/boot/i18n.ts': 'preset.i18n && preset.typescript',
+    'src/i18n/**/*.ts': 'preset.i18n && preset.typescript',
+    'src/store/**/*.ts': 'preset.vuex && preset.typescript',
+
+    // CSS preprocessors
+    '.stylintrc': `preset.lint && css === 'stylus'`,
+    'src/css/*.styl': `css === 'stylus'`,
+    'src/css/*.scss': `css === 'scss'`,
+    'src/css/*.sass': `css === 'sass'`,
     'src/css/app.css': `css === 'none'`,
-    'src/css/app.styl': `css === 'stylus'`,
-    'src/css/quasar.variables.styl': `css === 'stylus'`,
-    'src/css/app.scss': `css === 'scss'`,
-    'src/css/quasar.variables.scss': `css === 'scss'`,
-    'src/css/app.sass': `css === 'sass'`,
-    'src/css/quasar.variables.sass': `css === 'sass'`
   },
 
   complete
-}
+};
